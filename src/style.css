@@ -1,0 +1,188 @@
+* {
+    cursor: default;
+}
+
+:root {
+    --text-hover: #d6ad2b;
+    /* Classic CS yellow */
+    --menu-bg: rgba(0, 0, 0, 0.6);
+}
+
+body {
+    background-color: #000;
+    overflow: hidden;
+    height: 100vh;
+}
+
+#app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.background-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-image: url('/assets/main_image.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    /* darken the background slightly */
+    filter: brightness(0.7);
+}
+
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(255, 255, 255, 0) 50%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0.1));
+    background-size: 100% 4px;
+    pointer-events: none;
+}
+
+.menu-container {
+    position: absolute;
+    bottom: 100px;
+    left: 50px;
+    width: 300px;
+    padding: 20px;
+    /* Optional: CS 1.6 didn't have a visible container box for the main menu, mostly just text */
+}
+
+.menu-header {
+    display: none;
+    /* Hide header for standard menu look, or keep if desired */
+}
+
+.menu-items {
+    list-style: none;
+}
+
+.menu-items li {
+    margin-bottom: 15px;
+}
+
+.menu-items a {
+    color: var(--text);
+
+    text-decoration: none;
+    font-size: 20px;
+    display: block;
+    padding: 5px 10px;
+    transition: color 0.1s;
+}
+
+.menu-items a:hover {
+    color: var(--text-hover);
+    /* In CS 1.6, the sound plays on hover. We'll handle sound in JS */
+}
+
+.footer {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    font-size: 12px;
+    color: #888;
+}
+
+/* --- GAME UI --- */
+#game-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* In actual gameplay, use a crosshair cursor. You can use an image or the generic crosshair. */
+    cursor: crosshair !important;
+}
+
+#game-header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    color: #e4e4e4;
+    text-shadow: 1px 1px 0 #000;
+    pointer-events: none;
+    /* Let clicks pass through */
+    z-index: 20;
+}
+
+#target-area {
+    position: absolute;
+    top: 60px;
+    /* Below header */
+    left: 0;
+    width: 100%;
+    height: calc(100% - 60px);
+    overflow: hidden;
+}
+
+/* Individual targets */
+.game-target {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-radius: 50%;
+    /* Use a simple CSS-driven circle simulating a head */
+    box-shadow: inset 0 0 0 4px #e74c3c, 0 0 10px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+    /* Center click */
+    cursor: crosshair !important;
+    animation: spawn-target 0.2s ease-out forwards;
+}
+
+/* Added a dot in the middle just for looks */
+.game-target::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background-color: #f1c40f;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spawn-target {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* End Game Overlay (centered like a CS dialog) */
+#end-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    /* Managed by JS */
+    cursor: default !important;
+    /* Reset crosshair during menu */
+    z-index: 50;
+    width: 300px;
+}

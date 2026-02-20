@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counter-Strike 1.6 Inspiration</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/css/cs16.min.css">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="background-container">
+      <div class="scanlines"></div>
+      <!-- Background image will be set via CSS or JS once generated -->
+    </div>
+
+    <!-- Game UI (Hidden by Default) -->
+    <div id="game-ui" style="display: none;">
+      <div id="game-header">
+        <div id="timer-display">Time: 30</div>
+        <div id="score-display">Score: 0 / 0</div>
+      </div>
+      <div id="target-area"></div>
+
+      <!-- End screen -->
+      <div id="end-screen" style="display: none;" class="cs-dialog">
+        <div class="heading">
+          <div class="wrapper">
+            <p class="text">Round Over</p>
+          </div>
+        </div>
+        <div class="content" style="text-align: center; padding: 20px;">
+          <h2 id="final-score">Kills: 0</h2>
+          <p id="final-accuracy">Accuracy: 0%</p>
+        </div>
+        <menu class="footer-btns">
+          <button class="cs-btn" id="btn-menu">Main Menu</button>
+          <button class="cs-btn" id="btn-restart">Play Again</button>
+        </menu>
+      </div>
+    </div>
+
+    <div class="menu-container">
+      <div class="menu-header">
+        <h1>Counter-Strike</h1>
+        <span class="version">1.6</span>
+      </div>
+
+      <ul class="menu-items">
+        <li><a href="#" id="new-game-btn" data-sound="hover">New Game</a></li>
+        <li><a href="#" data-sound="hover">Find Servers</a></li>
+        <li><a href="#" data-sound="hover" onclick="document.querySelector('.cs-dialog').showModal();">Options</a></li>
+        <li><a href="#" data-sound="hover">Quit</a></li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p>Connection to server...</p>
+    </div>
+
+    <!-- Options Dialog -->
+    <dialog class="cs-dialog" id="options-dialog">
+      <form method="dialog">
+        <div class="heading">
+          <div class="wrapper">
+            <div class="icon"></div>
+            <p class="text">Options</p>
+          </div>
+          <button class="cs-btn close"></button>
+        </div>
+        <div class="content" style="width: 400px; height: 300px;">
+          <!-- Tabs for Options -->
+          <fieldset class="cs-fieldset" style="height: 100%;">
+            <legend>Multiplayer</legend>
+            <div class="cs-input">
+              <label class="cs-input__label" for="player-name">Player Name</label>
+              <br>
+              <input class="cs-input" id="player-name" type="text" value="Player" />
+            </div>
+            <br>
+            <div class="cs-slider">
+              <label for="mouse-sens">Mouse sensitivity</label>
+              <input id="mouse-sens" type="range" min="1" max="100" value="30" />
+            </div>
+          </fieldset>
+        </div>
+        <menu class="footer-btns">
+          <button class="cs-btn">OK</button>
+          <button class="cs-btn">Cancel</button>
+          <button class="cs-btn">Apply</button>
+        </menu>
+      </form>
+    </dialog>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
