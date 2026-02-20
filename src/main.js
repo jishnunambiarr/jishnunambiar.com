@@ -1,3 +1,5 @@
+import { initGame, stopGame } from './game/main';
+
 document.addEventListener('DOMContentLoaded', () => {
     const menuLinks = document.querySelectorAll('.menu-items a');
     const newGameBtn = document.getElementById('new-game-btn');
@@ -12,133 +14,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnMenu = document.getElementById('btn-menu');
     const btnRestart = document.getElementById('btn-restart');
 
+    // Pause screen elements
+    const pauseScreen = document.getElementById('pause-screen');
+    const btnResume = document.getElementById('btn-resume');
+    const btnQuitMatch = document.getElementById('btn-quit-match');
+
     // Simple audio approximations for now
     const shootSound = new Audio('https://actions.google.com/sounds/v1/weapons/gun_click.ogg');
     shootSound.volume = 0.5;
 
-    let score = 0;
-    let totalShots = 0;
-    let timeLeft = 30;
-    let gameInterval = null;
-    let spawnTimer = null;
+    let isPlaying = false;
 
     // --- GAME LOGIC ---
-    function updateScoreUI() {
-        scoreDisplay.textContent = `Kills: ${score}`;
-    }
-
-    function spawnTarget() {
-        if (timeLeft <= 0) return;
-
-        const target = document.createElement('div');
-        target.classList.add('game-target');
-
-        // Random position within the target area (giving bounds so it doesn't clip)
-        const minX = 40;
-        const maxX = targetArea.clientWidth - 40;
-        const minY = 40;
-        const maxY = targetArea.clientHeight - 40;
-
-        const randomX = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
-        const randomY = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-
-        target.style.left = `${randomX}px`;
-        target.style.top = `${randomY}px`;
-
-        target.addEventListener('click', (e) => {
-            e.stopPropagation(); // Don't trigger 'miss' click on game-ui
-            score++;
-            totalShots++;
-            updateScoreUI();
-
-            // Play gunshot sound quickly
-            const hitAudio = shootSound.cloneNode();
-            hitAudio.volume = 0.8;
-            hitAudio.play().catch(() => { });
-
-            // Visual feedback
-            target.style.backgroundColor = 'red';
-            target.style.transform = 'translate(-50%, -50%) scale(1.2)';
-            target.style.opacity = '0';
-            target.style.transition = 'all 0.15s ease-out';
-
-            setTimeout(() => {
-                target.remove();
-            }, 150);
-
-            // Spawn next target manually immediately for faster pace instead of waiting for timer
-            spawnTarget();
-        });
-
-        targetArea.appendChild(target);
-
-        // Target disappears after some time randomly (simulate missing)
-        const lifespan = Math.random() * 1000 + 1500; // 1500ms - 2500ms 
-        setTimeout(() => {
-            if (target.parentNode) {
-                target.remove();
-                if (timeLeft > 0 && targetArea.children.length < 3) {
-                    spawnTarget(); // Keep targets flowing if they expire
-                }
-            }
-        }, lifespan);
-    }
-
-    function missedShot() {
-        if (timeLeft <= 0) return;
-        totalShots++;
-
-        const missAudio = shootSound.cloneNode();
-        missAudio.volume = 0.3;
-        missAudio.play().catch(() => { });
-    }
-
-    function endGame() {
-        clearInterval(gameInterval);
-        targetArea.innerHTML = '';
-        endScreen.style.display = 'block';
-
-        const accuracy = totalShots > 0 ? Math.round((score / totalShots) * 100) : 0;
-        finalScore.textContent = `Kills: ${score}`;
-        finalAccuracy.textContent = `Accuracy: ${accuracy}%`;
-    }
 
     function startGame() {
-        // Reset states
-        score = 0;
-        totalShots = 0;
-        timeLeft = 30;
-        updateScoreUI();
-        timerDisplay.textContent = `Time: ${timeLeft}`;
-
-        targetArea.innerHTML = '';
         endScreen.style.display = 'none';
         menuContainer.style.display = 'none';
         gameUI.style.display = 'block';
 
-        // Background music / Go go go sound here eventually
+        // Clear out any old 2D aim trainer target area stuff
+        targetArea.innerHTML = '';
+        timerDisplay.style.display = 'none';
+        scoreDisplay.style.display = 'none';
 
-        // Timer countdown
-        gameInterval = setInterval(() => {
-            timeLeft--;
-            timerDisplay.textContent = `Time: ${timeLeft}`;
-            if (timeLeft <= 0) {
-                endGame();
-            }
-        }, 1000);
+        // Boot up the 3D engine inside the gameUI container
+        initGame(
+            gameUI,
+            () => { pauseGame(); },
+            () => { resumeGameUI(); }
+        );
+        isPlaying = true;
 
-        // Initial spawn
-        spawnTarget();
-        setTimeout(spawnTarget, 500); // multiple targets at once
+        // Wait briefly for engine to init, then lock pointer
+        setTimeout(() => {
+            import('./game/main').then(m => m.controls && m.controls.lock());
+        }, 50);
+    }
+
+    function resumeGameUI() {
+        pauseScreen.style.display = 'none';
+        isPlaying = true;
+    }
+
+    function resumeGame() {
+        import('./game/main').then(m => m.controls && m.controls.lock());
+    }
+
+    function pauseGame() {
+        pauseScreen.style.display = 'block';
+        isPlaying = false;
     }
 
     // --- EVENT LISTENERS ---
 
-    // Clicking anywhere in the game UI but NOT a target counts as a miss
-    gameUI.addEventListener('click', (e) => {
-        // Only count as miss if playing and clicking area (not the end screen)
-        if (timeLeft > 0 && e.target.id !== 'end-screen' && !e.target.closest('.cs-dialog')) {
-            missedShot();
+    // Fallback: Toggle pause menu using Escape, in case pointer lock didn't catch 
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isPlaying) {
+            e.preventDefault();
+            // PointerLockControls naturally unlocks on escape
+            import('./game/main').then(m => m.controls && m.controls.unlock());
         }
     });
 
@@ -149,12 +83,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnRestart.addEventListener('click', (e) => {
         e.preventDefault();
+        // Since it's a 3D scene, restarting might mean reloading the level later
+        stopGame();
         startGame();
     });
 
     btnMenu.addEventListener('click', (e) => {
         e.preventDefault();
+        stopGame(); // Cleanup the 3D renderer
+
+        isPlaying = false;
         endScreen.style.display = 'none';
+        pauseScreen.style.display = 'none';
+        gameUI.style.display = 'none';
+        menuContainer.style.display = 'block';
+    });
+
+    btnResume.addEventListener('click', (e) => {
+        e.preventDefault();
+        resumeGame();
+    });
+
+    btnQuitMatch.addEventListener('click', (e) => {
+        e.preventDefault();
+        stopGame();
+
+        isPlaying = false;
+        pauseScreen.style.display = 'none';
         gameUI.style.display = 'none';
         menuContainer.style.display = 'block';
     });

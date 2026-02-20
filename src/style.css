@@ -174,7 +174,8 @@ body {
 }
 
 /* End Game Overlay (centered like a CS dialog) */
-#end-screen {
+#end-screen,
+#pause-screen {
     position: absolute;
     top: 50%;
     left: 50%;
